@@ -6,34 +6,33 @@ import java.util.ArrayList;
 import controle.Constantes;
 
 public class Poupador extends ProgramaPoupador {
-
 	//VISAO POUPADOR
 	static final Integer SEM_VISAO = -2;
 	static final Integer FORA = -1;
 	static final Integer VAZIO = 0;
-	static final Integer PAREDE = Constantes.numeroParede; // 1
+	static final Integer PAREDE = 1; 
 	static final Integer BANCO = 3;
-	static final Integer MOEDA = Constantes.numeroMoeda; //4
-	static final Integer PASTILHA_PODER = Constantes.numeroPastinhaPoder; //5
+	static final Integer MOEDA = 4;
+	static final Integer PASTILHA_PODER = 5;
 	static final Integer POUPADOR = 100;
 	static final Integer LADRAO = 200;
-	
-	static final Integer PESO_LADRAO = -50000;
-	static final Integer PESO_SEM_VISAO = -50;
-	static final Integer PESO_FORA = -50;
-	static final Integer PESO_PAREDE = -50;
-	static final Integer PESO_BANCO = 100;
-	static final Integer PESO_VAZIO = 200;
-	static final Integer PESO_PASTILHA_PODER = 500;
+	//PESOS
+	static final Integer PESO_LADRAO = -10000;
+	static final Integer PESO_FORA = -500;
+	static final Integer PESO_PAREDE = 10;
+	static final Integer PESO_PASTILHA_PODER = -300;
+	static final Integer PESO_SEM_VISAO = -100;
+	static final Integer PESO_VAZIO = 0;
+	static final Integer PESO_BANCO = 1000;
 	static final Integer PESO_MOEDA = 3000;
- 
+	//DIRECAO ACAO MATRIX
 	static Integer CIMA = 7;
 	static Integer ESQUERDA = 11;
 	static Integer DIREITA = 12;
 	static Integer BAIXO = 16;
-
-	private ArrayList<Caminho> caminho = new ArrayList<>();
-	private ArrayList<Point> pontosVisitados = new ArrayList<Point>();
+	//OUTROS
+	private ArrayList<Caminho> pontosVisitados = new ArrayList<>();
+	private ArrayList<Caminho> caminhoPercorrido = new ArrayList<Caminho>();
 	private Point posicaoAnteiro = null;
 	private int[] visao;
 	private Point locBanco = Constantes.posicaoBanco;
@@ -41,14 +40,12 @@ public class Poupador extends ProgramaPoupador {
 	
 	public int acao() {
 		Integer acaoRetorno = null;
-		
-		Point posicaoAtual = sensor.getPosicao();
 		visao = sensor.getVisaoIdentificacao();
 		
 		definirPesosVisao();
-		acaoRetorno = determinarDirecao(posicaoAtual);
-		
-		verificarCaminho(posicaoAtual);
+		acaoRetorno = determinarDirecao();
+		atualizarPontosVisitados();
+		atulizarCaminhoPercorrido();
 		
 		return acaoRetorno;
 	}
@@ -58,28 +55,29 @@ public class Poupador extends ProgramaPoupador {
 		for(int i=0;i<visao.length; i++){
 			int peso = 0;
 			if(visao[i] == MOEDA){
-				peso = PESO_MOEDA;
+				peso += PESO_MOEDA;
 			}
 			if(visao[i] == PASTILHA_PODER){
-				peso = PESO_PASTILHA_PODER;
+				peso += PESO_PASTILHA_PODER;
 			}
 			if(visao[i] == BANCO){
-				peso = PESO_BANCO;
+				if(sensor.getNumeroDeMoedas() == 0){
+					peso += (10*-PESO_BANCO);
+				}else{
+					peso += ((10 * sensor.getNumeroDeMoedas()) * PESO_BANCO);
+				}
 			}
 			if(visao[i] == PAREDE){
-				peso = PESO_PAREDE;
-			}
-			if(visao[i] == VAZIO){
-				peso = PESO_VAZIO;
+				peso += PESO_PAREDE;
 			}
 			if(visao[i] == FORA){
-				peso = PESO_FORA;
+				peso += PESO_FORA;
 			}
 			if(visao[i] == SEM_VISAO){
-				peso = PESO_SEM_VISAO;
+				peso += PESO_SEM_VISAO;
 			}
 			if(visao[i] == LADRAO){
-				peso = PESO_LADRAO;
+				peso += PESO_LADRAO;
 			}
 			listaPesos[i] = peso;
 		}
@@ -87,79 +85,134 @@ public class Poupador extends ProgramaPoupador {
 		printMatriz(listaPesos);
 	}
 	
-	public int determinarDirecao(Point pontoAtual){
+	public int determinarDirecao(){
 		int retorno = 0;
-		int pesoTotalBaixo = (listaPesos[14] + listaPesos[15] + listaPesos[16] + listaPesos[17] + listaPesos[18] + listaPesos[19] + listaPesos[20] + listaPesos[21] + listaPesos[22] + listaPesos[23]);
-		int pesoTotalEsquerda = (listaPesos[0] + listaPesos[5] + listaPesos[10] + listaPesos[14] + listaPesos[19] + listaPesos[1] + listaPesos[6] + listaPesos[11] + listaPesos[15] + listaPesos[20]);
-		int pesoTotalDireita = (listaPesos[3] + listaPesos[8] + listaPesos[12] + listaPesos[17] + listaPesos[22] + listaPesos[4] + listaPesos[9] + listaPesos[13] + listaPesos[18] + listaPesos[23]);
-		int pesoTotalCima = (listaPesos[0] + listaPesos[1] + listaPesos[2] + listaPesos[3] + listaPesos[4] + listaPesos[5] + listaPesos[6] + listaPesos[7] + listaPesos[8] + listaPesos[9]);
+		Integer dX, dY;
 		
+		dX = locBanco.x - sensor.getPosicao().x;
+		dY = locBanco.y - sensor.getPosicao().y;
+		if(dX > 0){
+			listaPesos[DIREITA] += (sensor.getNumeroDeMoedas() * 30);
+		}
+		if(dX < 0){
+			listaPesos[ESQUERDA] += (sensor.getNumeroDeMoedas() * 30);
+		}
+		if(dY > 0){
+			listaPesos[BAIXO] += (sensor.getNumeroDeMoedas() * 30);
+		}
+		if(dY < 0){
+			listaPesos[CIMA] += (sensor.getNumeroDeMoedas() * 30);
+		}
+		
+		
+		int pesoTotalBaixo    = (listaPesos[14] + listaPesos[15] + listaPesos[16] + listaPesos[17] + listaPesos[18] + listaPesos[19] + listaPesos[20] + listaPesos[21] + listaPesos[22] + listaPesos[23]);
+		int pesoTotalEsquerda = (listaPesos[0]  + listaPesos[5]  + listaPesos[10] + listaPesos[14] + listaPesos[19] + listaPesos[1]  + listaPesos[6]  + listaPesos[11] + listaPesos[15] + listaPesos[20]);
+		int pesoTotalDireita  = (listaPesos[3]  + listaPesos[8]  + listaPesos[12] + listaPesos[17] + listaPesos[22] + listaPesos[4]  + listaPesos[9]  + listaPesos[13] + listaPesos[18] + listaPesos[23]);
+		int pesoTotalCima     = (listaPesos[0]  + listaPesos[1]  + listaPesos[2]  + listaPesos[3]  + listaPesos[4]  + listaPesos[5]  + listaPesos[6]  + listaPesos[7]  + listaPesos[8]  + listaPesos[9]);
+		
+		
+		Point posicaoAtual = sensor.getPosicao();
+		pesoTotalCima     += trazerPesoPosicao(posicaoAtual.x,  posicaoAtual.y-1);
+		pesoTotalBaixo    += trazerPesoPosicao(posicaoAtual.x,  posicaoAtual.y+1);
+		pesoTotalDireita  += trazerPesoPosicao(posicaoAtual.x+1,posicaoAtual.y);
+		pesoTotalEsquerda += trazerPesoPosicao(posicaoAtual.x-1,posicaoAtual.y);
+		
+		pesoTotalCima     += trazerPesoCaminho(posicaoAtual.x,  posicaoAtual.y-1);
+		pesoTotalBaixo    += trazerPesoCaminho(posicaoAtual.x,  posicaoAtual.y+1);
+		pesoTotalDireita  += trazerPesoCaminho(posicaoAtual.x+1,posicaoAtual.y);
+		pesoTotalEsquerda += trazerPesoCaminho(posicaoAtual.x-1,posicaoAtual.y);
+		
+		
+		//Pastilha
+		if(visao[CIMA]==PASTILHA_PODER && sensor.getNumeroDeMoedas() < 10){
+			pesoTotalCima -= 5000;
+		}
+		if(visao[BAIXO]==PASTILHA_PODER  && sensor.getNumeroDeMoedas() < 10){
+			pesoTotalBaixo -= 5000;
+		}
+		if(visao[DIREITA]==PASTILHA_PODER && sensor.getNumeroDeMoedas() < 10){
+			pesoTotalDireita -= 5000;
+		}
+		if(visao[ESQUERDA]==PASTILHA_PODER && sensor.getNumeroDeMoedas() < 10){
+			pesoTotalEsquerda -= 5000;
+		}
+		
+		//Parede
+		if(visao[CIMA]==PAREDE){
+			pesoTotalCima -= 10000;
+		}
+		if(visao[BAIXO]==PAREDE){
+			pesoTotalBaixo -= 10000;
+		}
+		if(visao[DIREITA]==PAREDE){
+			pesoTotalDireita -= 10000;
+		}
+		if(visao[ESQUERDA]==PAREDE){
+			pesoTotalEsquerda -= 10000;
+		}
+		
+		//Moeda
 		if(visao[CIMA]==MOEDA){
-			pesoTotalCima += 3000;
+			pesoTotalCima += 5000;
 		}
 		if(visao[BAIXO]==MOEDA){
-			pesoTotalBaixo += 3000;
+			pesoTotalBaixo += 5000;
 		}
 		if(visao[DIREITA]==MOEDA){
-			pesoTotalDireita += 3000;
+			pesoTotalDireita += 5000;
 		}
 		if(visao[ESQUERDA]==MOEDA){
-			pesoTotalEsquerda += 3000;
+			pesoTotalEsquerda += 5000;
 		}
 		
-		if(visao[CIMA]==LADRAO){
-			pesoTotalBaixo += 50000;
+		//Ladrao
+		if(visao[CIMA]==LADRAO || visao[CIMA]==POUPADOR){
+			pesoTotalBaixo += 30000;
 		}
-		if(visao[BAIXO]==LADRAO){
-			pesoTotalCima += 50000;
+		if(visao[BAIXO]==LADRAO || visao[BAIXO]==POUPADOR){
+			pesoTotalCima += 30000;
 		}
-		if(visao[DIREITA]==LADRAO){
-			pesoTotalEsquerda += 50000;
+		if(visao[DIREITA]==LADRAO || visao[DIREITA]==POUPADOR){
+			pesoTotalEsquerda += 30000;
 		}
-		if(visao[ESQUERDA]==LADRAO){
-			pesoTotalDireita += 50000;
+		if(visao[ESQUERDA]==LADRAO || visao[ESQUERDA]==POUPADOR){
+			pesoTotalDireita += 30000;
 		}
 		
-		pesoTotalBaixo += trazerPesoPosicao(pontoAtual.x,pontoAtual.y-1);
-		pesoTotalCima += trazerPesoPosicao(pontoAtual.x,pontoAtual.y+1);
-		pesoTotalDireita += trazerPesoPosicao(pontoAtual.x+1,pontoAtual.y);
-		pesoTotalEsquerda += trazerPesoPosicao(pontoAtual.x-1,pontoAtual.y);
 		
-	
-		int maior = pesoTotalBaixo;
-		retorno = MoverBaixo();
 		
-		if(maior < pesoTotalEsquerda){
-			maior = pesoTotalEsquerda;
-			retorno = MoverEsquerda();
+		//1 2 3 4
+		int[] pesosDirecao = { pesoTotalCima, pesoTotalBaixo, pesoTotalDireita, pesoTotalEsquerda };
+		Integer maior = -987654321;
+		
+		for (int i = 0; i < pesosDirecao.length; i++) {
+			if (pesosDirecao[i] > maior) {
+				maior = pesosDirecao[i];
+				retorno = (i+1);
+				
+			}
 		}
-		if(maior < pesoTotalDireita){
-			maior = pesoTotalDireita;
-			retorno = MoverDireita();
+		//Verifica se existe mais de um peso com o mesmo valor
+		ArrayList<Integer> pesosIguais = new ArrayList<Integer>();
+		for (int i = 0; i < pesosDirecao.length; i++) {
+			if (pesosDirecao[i] == maior) {
+				pesosIguais.add(i+1);
+			}
 		}
-		if(maior < pesoTotalCima){
-			retorno = MoverCima();
+		//Verifica se Existe mais de um peso na lista, se hover faz um randon
+		if (pesosIguais.size() > 1) {
+			Integer i = (int) (Math.random() * (pesosIguais.size()));
+			retorno = pesosIguais.get(i);
 		}
+		
+		System.out.println("Cima: "+pesoTotalCima + " # X: "+(posicaoAtual.x)+" Y: "+(posicaoAtual.y-1));
+		System.out.println("Baixo: "+pesoTotalBaixo + " # X: "+(posicaoAtual.x)+" Y: "+(posicaoAtual.y+1));
+		System.out.println("Direita: "+pesoTotalDireita + " # X: "+(posicaoAtual.x+1)+" Y: "+(posicaoAtual.y));
+		System.out.println("Esquerda: "+pesoTotalEsquerda + " # X: "+(posicaoAtual.x-1)+" Y: "+(posicaoAtual.y));
 
 		return retorno;
 	}
 	
-	
-	public Integer FicarParado(){
-		return 0;
-	}
-	public Integer MoverCima(){
-		return 1;
-	}
-	public Integer MoverBaixo(){
-		return 2;
-	}
-	public Integer MoverDireita(){
-		return 3;
-	}
-	public Integer MoverEsquerda(){
-		return 4;
-	}
 	
 	public void printMatriz(int m[]){
 		System.out.println("\n["+m[0]+"]"+"["+m[1]+"]"+"["+m[2]+"]"+"["+m[3]+"]"+"["+m[4]+"]");
@@ -169,38 +222,63 @@ public class Poupador extends ProgramaPoupador {
 		System.out.println("["+m[19]+"]"+"["+m[20]+"]"+"["+m[21]+"]"+"["+m[22]+"]"+"["+m[23]+"]\n");
 	}
 	
-	public void verificarCaminho(Point posicao){
-		pontosVisitados.add(posicao);
-		posicaoAnteiro = posicao;
+	public void atualizarPontosVisitados(){
+		Point posicaoAtual = sensor.getPosicao();
+		posicaoAnteiro = posicaoAtual;
 		boolean existe = false;
-		for(Caminho c : caminho){
-			if(posicao.x == c.ponto.x && posicao.y == c.ponto.y){
-				c.peso -=100;
+		for(Caminho c : pontosVisitados){
+			if(posicaoAtual.x == c.ponto.x && posicaoAtual.y == c.ponto.y){
+				c.fator++;
 				existe = true;
 			}
 		}
 		if(!existe){
-			caminho.add(new Caminho(posicao));
+			pontosVisitados.add(new Caminho(posicaoAtual));
 		}
 	}
 	
 	public Integer trazerPesoPosicao(Integer x, Integer y){
-		for(Caminho c : caminho){
-			if(x == c.ponto.x && y == c.ponto.y){
-				return c.peso;
+		for(Caminho c : pontosVisitados){
+			if(c.ponto.x == x && c.ponto.y == y){
+				return (c.fator*-30);
 			}
 		}
 		return 1000;
 	}
 	
+	public void atulizarCaminhoPercorrido(){
+		Point posicaoAtual = sensor.getPosicao();
+		if(caminhoPercorrido.size() < 30){
+			caminhoPercorrido.add(new Caminho(posicaoAtual,-10000));
+		}else{
+			caminhoPercorrido.remove((caminhoPercorrido.size()-1));
+			caminhoPercorrido.add(new Caminho(posicaoAtual,-10000));
+		}
+	}
+	
+	public Integer trazerPesoCaminho(Integer x, Integer y){
+		for(Caminho c : caminhoPercorrido){
+			if(c.ponto.x == x && c.ponto.y == y){
+				return c.fator;
+			}
+		}
+		return 0;
+	}
+	
 }
+
 class Caminho{
 	Point ponto;
-	Integer peso;
+	Integer fator;
 	
 	public Caminho(Point p){
 		this.ponto = p;
-		peso = -100;
+		fator = 1;
+	}
+	
+	public Caminho(Point p, Integer fator){
+		this.ponto = p;
+		this.fator = fator;
 	}
 	
  }
