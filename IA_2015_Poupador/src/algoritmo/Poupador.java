@@ -149,7 +149,7 @@ public class Poupador extends ProgramaPoupador {
 			pesoTotalEsquerda -= 10000;
 		}
 		
-		//Parede ou sem Visao
+		//Parede ou Fora
 		if(visao[CIMA]==PAREDE || visao[CIMA] == FORA){
 			pesoTotalCima -= 15000;
 		}
@@ -199,7 +199,6 @@ public class Poupador extends ProgramaPoupador {
 			if (pesosDirecao[i] > maior) {
 				maior = pesosDirecao[i];
 				retorno = (i+1);
-				
 			}
 		}
 		//Verifica se existe mais de um peso com o mesmo valor
@@ -249,7 +248,7 @@ public class Poupador extends ProgramaPoupador {
 	public Integer trazerPesoPosicao(Integer x, Integer y){
 			for(Caminho c : pontosVisitados){
 				if(c.ponto.x == x && c.ponto.y == y){
-					return -(c.fator*50);
+					return -(c.fator*100);
 				}
 			}
 		return 0;
@@ -260,7 +259,7 @@ public class Poupador extends ProgramaPoupador {
 		if(caminhoPercorrido.size() < 40){
 			caminhoPercorrido.add(new Caminho(posicaoAtual,-6000));
 		}else{
-			caminhoPercorrido.remove((caminhoPercorrido.size()-1));
+			caminhoPercorrido.remove((0));
 			caminhoPercorrido.add(new Caminho(posicaoAtual,-6000));
 		}
 	}
