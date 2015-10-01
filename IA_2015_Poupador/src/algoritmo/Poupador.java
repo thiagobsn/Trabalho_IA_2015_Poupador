@@ -278,28 +278,28 @@ public class Poupador extends ProgramaPoupador {
 		int[] olfato = sensor.getAmbienteOlfatoLadrao();
 		for(int i=0; i<olfato.length;i++){
 			if(i == 0 ){
-				visao[6] += (olfato[i]*-200);
+				listaPesos[6] += (olfato[i]/-1000);
 			}
 			if(i == 1 ){
-				visao[7] += (olfato[i]*-200);
+				listaPesos[7] += (olfato[i]/-1000);
 			}
 			if(i == 2 ){
-				visao[8] += (olfato[i]*-200);
+				listaPesos[8] += (olfato[i]/-1000);
 			}
 			if(i == 3 ){
-				visao[11] += (olfato[i]*-200);
+				listaPesos[11] += (olfato[i]/-1000);
 			}
 			if(i == 4 ){
-				visao[12] += (olfato[i]*-200);
+				listaPesos[12] += (olfato[i]/-1000);
 			}
 			if(i == 5 ){
-				visao[15] += (olfato[i]*-200);
+				listaPesos[15] += (olfato[i]/-1000);
 			}
 			if(i == 6 ){
-				visao[16] += (olfato[i]*-200);
+				listaPesos[16] += (olfato[i]/-1000);
 			}
 			if(i == 7 ){
-				visao[17] += (olfato[i]*-200);
+				listaPesos[17] += (olfato[i]/-1000);
 			}
 		}
 	}
@@ -308,28 +308,28 @@ public class Poupador extends ProgramaPoupador {
 		int[] olfato = sensor.getAmbienteOlfatoLadrao();
 		for(int i=0; i<olfato.length;i++){
 			if(i == 0 ){
-				visao[6] += (olfato[i]*-100);
+				listaPesos[6] += (olfato[i]/-500);
 			}
 			if(i == 1 ){
-				visao[7] += (olfato[i]*-100);
+				listaPesos[7] += (olfato[i]/-500);
 			}
 			if(i == 2 ){
-				visao[8] += (olfato[i]*-100);
+				listaPesos[8] += (olfato[i]/-500);
 			}
 			if(i == 3 ){
-				visao[11] += (olfato[i]*-100);
+				listaPesos[11] += (olfato[i]/-500);
 			}
 			if(i == 4 ){
-				visao[12] += (olfato[i]*-100);
+				listaPesos[12] += (olfato[i]/-500);
 			}
 			if(i == 5 ){
-				visao[15] += (olfato[i]*-100);
+				listaPesos[15] += (olfato[i]/-500);
 			}
 			if(i == 6 ){
-				visao[16] += (olfato[i]*-100);
+				listaPesos[16] += (olfato[i]/-500);
 			}
 			if(i == 7 ){
-				visao[17] += (olfato[i]*-100);
+				listaPesos[17] += (olfato[i]/-500);
 			}
 		}
 	}
