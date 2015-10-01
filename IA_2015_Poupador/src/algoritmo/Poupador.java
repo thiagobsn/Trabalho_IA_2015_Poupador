@@ -17,14 +17,14 @@ public class Poupador extends ProgramaPoupador {
 	static final Integer POUPADOR = 100;
 	static final Integer LADRAO = 200;
 	//PESOS
-	static final Integer PESO_LADRAO = -10000;
-	static final Integer PESO_FORA = -500;
-	static final Integer PESO_PAREDE = 10;
-	static final Integer PESO_PASTILHA_PODER = -300;
+	static final Integer PESO_LADRAO = -1000;
+	static final Integer PESO_FORA = -300;
+	static final Integer PESO_PAREDE = -300;
+	static final Integer PESO_PASTILHA_PODER = -200;
 	static final Integer PESO_SEM_VISAO = -100;
 	static final Integer PESO_VAZIO = 0;
-	static final Integer PESO_BANCO = 1000;
-	static final Integer PESO_MOEDA = 3000;
+	static final Integer PESO_BANCO = 200;
+	static final Integer PESO_MOEDA = 800;
 	//DIRECAO ACAO MATRIX
 	static Integer CIMA = 7;
 	static Integer ESQUERDA = 11;
@@ -61,10 +61,10 @@ public class Poupador extends ProgramaPoupador {
 				peso += PESO_PASTILHA_PODER;
 			}
 			if(visao[i] == BANCO){
-				if(sensor.getNumeroDeMoedas() == 0){
-					peso += (10*-PESO_BANCO);
+				if(sensor.getNumeroDeMoedas() > 0){
+					peso += sensor.getNumeroDeMoedas() * PESO_BANCO;
 				}else{
-					peso += ((10 * sensor.getNumeroDeMoedas()) * PESO_BANCO);
+					peso += -5000;
 				}
 			}
 			if(visao[i] == PAREDE){
@@ -76,7 +76,7 @@ public class Poupador extends ProgramaPoupador {
 			if(visao[i] == SEM_VISAO){
 				peso += PESO_SEM_VISAO;
 			}
-			if(visao[i] == LADRAO){
+			if(visao[i] >= LADRAO){
 				peso += PESO_LADRAO;
 			}
 			listaPesos[i] = peso;
@@ -92,16 +92,16 @@ public class Poupador extends ProgramaPoupador {
 		dX = locBanco.x - sensor.getPosicao().x;
 		dY = locBanco.y - sensor.getPosicao().y;
 		if(dX > 0){
-			listaPesos[DIREITA] += (sensor.getNumeroDeMoedas() * 30);
+			listaPesos[DIREITA] += (sensor.getNumeroDeMoedas() * 100);
 		}
 		if(dX < 0){
-			listaPesos[ESQUERDA] += (sensor.getNumeroDeMoedas() * 30);
+			listaPesos[ESQUERDA] += (sensor.getNumeroDeMoedas() * 100);
 		}
 		if(dY > 0){
-			listaPesos[BAIXO] += (sensor.getNumeroDeMoedas() * 30);
+			listaPesos[BAIXO] += (sensor.getNumeroDeMoedas() * 100);
 		}
 		if(dY < 0){
-			listaPesos[CIMA] += (sensor.getNumeroDeMoedas() * 30);
+			listaPesos[CIMA] += (sensor.getNumeroDeMoedas() * 100);
 		}
 		
 		
@@ -124,31 +124,31 @@ public class Poupador extends ProgramaPoupador {
 		
 		
 		//Pastilha
-		if(visao[CIMA]==PASTILHA_PODER && sensor.getNumeroDeMoedas() < 10){
-			pesoTotalCima -= 5000;
+		if(visao[CIMA]==PASTILHA_PODER && (sensor.getNumeroDeMoedas() < 15 || sensor.getNumeroJogadasImunes() > 0)){
+			pesoTotalCima -= 12000;
 		}
-		if(visao[BAIXO]==PASTILHA_PODER  && sensor.getNumeroDeMoedas() < 10){
-			pesoTotalBaixo -= 5000;
+		if(visao[BAIXO]==PASTILHA_PODER  && (sensor.getNumeroDeMoedas() < 15 || sensor.getNumeroJogadasImunes() > 0)){
+			pesoTotalBaixo -= 12000;
 		}
-		if(visao[DIREITA]==PASTILHA_PODER && sensor.getNumeroDeMoedas() < 10){
-			pesoTotalDireita -= 5000;
+		if(visao[DIREITA]==PASTILHA_PODER && (sensor.getNumeroDeMoedas() < 15 || sensor.getNumeroJogadasImunes() > 0)){
+			pesoTotalDireita -= 12000;
 		}
-		if(visao[ESQUERDA]==PASTILHA_PODER && sensor.getNumeroDeMoedas() < 10){
-			pesoTotalEsquerda -= 5000;
+		if(visao[ESQUERDA]==PASTILHA_PODER && (sensor.getNumeroDeMoedas() < 15 || sensor.getNumeroJogadasImunes() > 0)){
+			pesoTotalEsquerda -= 12000;
 		}
 		
-		//Parede
-		if(visao[CIMA]==PAREDE){
-			pesoTotalCima -= 10000;
+		//Parede ou sem Visao
+		if(visao[CIMA]==PAREDE || visao[CIMA] == FORA){
+			pesoTotalCima -= 12000;
 		}
-		if(visao[BAIXO]==PAREDE){
-			pesoTotalBaixo -= 10000;
+		if(visao[BAIXO]==PAREDE || visao[BAIXO] == FORA){
+			pesoTotalBaixo -= 12000;
 		}
-		if(visao[DIREITA]==PAREDE){
-			pesoTotalDireita -= 10000;
+		if(visao[DIREITA]==PAREDE || visao[DIREITA] == FORA){
+			pesoTotalDireita -= 12000;
 		}
-		if(visao[ESQUERDA]==PAREDE){
-			pesoTotalEsquerda -= 10000;
+		if(visao[ESQUERDA]==PAREDE || visao[ESQUERDA] == FORA){
+			pesoTotalEsquerda -= 12000;	
 		}
 		
 		//Moeda
@@ -165,21 +165,19 @@ public class Poupador extends ProgramaPoupador {
 			pesoTotalEsquerda += 5000;
 		}
 		
-		//Ladrao
-		if(visao[CIMA]==LADRAO || visao[CIMA]==POUPADOR){
-			pesoTotalBaixo += 30000;
+		//Ladrao ou Popador
+		if(visao[CIMA]>=LADRAO || visao[CIMA]>=POUPADOR){
+			pesoTotalBaixo += 6000;
 		}
-		if(visao[BAIXO]==LADRAO || visao[BAIXO]==POUPADOR){
-			pesoTotalCima += 30000;
+		if(visao[BAIXO]>=LADRAO || visao[BAIXO]>=POUPADOR){
+			pesoTotalCima += 6000;
 		}
-		if(visao[DIREITA]==LADRAO || visao[DIREITA]==POUPADOR){
-			pesoTotalEsquerda += 30000;
+		if(visao[DIREITA]>=LADRAO || visao[DIREITA]>=POUPADOR){
+			pesoTotalEsquerda += 6000;
 		}
-		if(visao[ESQUERDA]==LADRAO || visao[ESQUERDA]==POUPADOR){
-			pesoTotalDireita += 30000;
+		if(visao[ESQUERDA]>=LADRAO || visao[ESQUERDA]>=POUPADOR){
+			pesoTotalDireita += 6000;
 		}
-		
-		
 		
 		//1 2 3 4
 		int[] pesosDirecao = { pesoTotalCima, pesoTotalBaixo, pesoTotalDireita, pesoTotalEsquerda };
@@ -226,9 +224,13 @@ public class Poupador extends ProgramaPoupador {
 		Point posicaoAtual = sensor.getPosicao();
 		posicaoAnteiro = posicaoAtual;
 		boolean existe = false;
-		for(Caminho c : pontosVisitados){
-			if(posicaoAtual.x == c.ponto.x && posicaoAtual.y == c.ponto.y){
-				c.fator++;
+		for (int i = 0; i < pontosVisitados.size(); i++) {
+			if(posicaoAtual.x == pontosVisitados.get(i).ponto.x && posicaoAtual.y == pontosVisitados.get(i).ponto.y){
+				if(pontosVisitados.get(i).fator < 50){
+					pontosVisitados.get(i).fator++;
+				}else{
+					pontosVisitados.get(i).fator = 1;
+				}
 				existe = true;
 			}
 		}
@@ -240,7 +242,7 @@ public class Poupador extends ProgramaPoupador {
 	public Integer trazerPesoPosicao(Integer x, Integer y){
 		for(Caminho c : pontosVisitados){
 			if(c.ponto.x == x && c.ponto.y == y){
-				return (c.fator*-30);
+				return (c.fator*-100);
 			}
 		}
 		return 1000;
@@ -248,21 +250,25 @@ public class Poupador extends ProgramaPoupador {
 	
 	public void atulizarCaminhoPercorrido(){
 		Point posicaoAtual = sensor.getPosicao();
-		if(caminhoPercorrido.size() < 30){
-			caminhoPercorrido.add(new Caminho(posicaoAtual,-10000));
+		if(caminhoPercorrido.size() < 20){
+			caminhoPercorrido.add(new Caminho(posicaoAtual,-12000));
 		}else{
 			caminhoPercorrido.remove((caminhoPercorrido.size()-1));
-			caminhoPercorrido.add(new Caminho(posicaoAtual,-10000));
+			caminhoPercorrido.add(new Caminho(posicaoAtual,-12000));
 		}
 	}
 	
 	public Integer trazerPesoCaminho(Integer x, Integer y){
-		for(Caminho c : caminhoPercorrido){
-			if(c.ponto.x == x && c.ponto.y == y){
-				return c.fator;
+		Integer valor = 0;
+		if(sensor.getNumeroDeMoedas()  > 0 && sensor.getNumeroDeMoedas() <= 20){
+			for(Caminho c : caminhoPercorrido){
+				if(c.ponto.x == x && c.ponto.y == y){
+					valor += c.fator;
+				}
 			}
+			return valor;
 		}
-		return 0;
+		return 1000;
 	}
 	
 }
